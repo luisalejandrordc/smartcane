@@ -15,6 +15,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #include "config.h"
+#include "sonar.h"
 
 // ─── Libraries ────────────────────────────────────────────────────────────────
 // These will be uncommented as each sub-phase introduces them.
@@ -100,9 +101,10 @@ void setup() {
   delay(1000);  // Give time to the Serial Monitor to open and establish connection
   Serial.println("=== SmartCane Booting ===");
 
+
   // Sub-phase inits will be added here one by one:
   // initDFPlayer();   // 2D
-  // initSonar();      // 2B
+  initSonar();      // 2B
   // initBattery();    // 2C
   // initButton();     // 2E
   // initGPS();        // 2G
@@ -110,7 +112,7 @@ void setup() {
 
   // playAudio(AUDIO_WELCOME);  // 2D
 
-  currentState = STATE_BLE_CONNECTING;
+  currentState = STATE_RUNNING;
   Serial.println("=== Boot complete. Entering main loop. ===");
 }
 
@@ -128,15 +130,22 @@ void loop() {
       break;
 
     case STATE_RUNNING:
+      // 2B: Measure distance and control vibration
+      if (millis() - lastSonarCycleMs >= SONAR_CYCLE_MS) {
+        lastSonarCycleMs = millis();
+        int distance = measureDistanceCm();
+        setVibration(distance);
+
+        // Debug output — remove or comment out in final firmware
+        Serial.print("[SONAR] Distance: ");
+        Serial.print(distance);
+        Serial.println(" cm");
+      }
+      break;
+
       // 2E: Check button (short = battery, long = SOS)
       // handleButton();
 
-      // 2B: Measure distance and control vibration
-      // if (millis() - lastSonarCycleMs >= SONAR_CYCLE_MS) {
-      //   lastSonarCycleMs = millis();
-      //   int distance = measureDistanceCm();
-      //   setVibration(distance);
-      // }
 
       // 2C: Periodic battery check
       // if (millis() - lastBatteryCheckMs >= BATTERY_CHECK_INTERVAL_MS) {

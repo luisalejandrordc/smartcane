@@ -17,10 +17,8 @@ void initSonar() {
   digitalWrite(PIN_TRIG, LOW);
 
   // LEDC PWM setup for vibration motor
-  ledcSetup(VIBRATION_PWM_CHANNEL, VIBRATION_PWM_FREQ,
-            VIBRATION_PWM_RESOLUTION);
-  ledcAttachPin(PIN_VIBRATION, VIBRATION_PWM_CHANNEL);
-  ledcWrite(VIBRATION_PWM_CHANNEL, 0); // Motor off at start
+  ledcAttach(PIN_VIBRATION, VIBRATION_PWM_FREQ, VIBRATION_PWM_RESOLUTION);
+  ledcWrite(PIN_VIBRATION, 0); // Motor off at start
 
   Serial.println("[SONAR] Initialized.");
 }
@@ -93,13 +91,13 @@ int measureDistanceCm() {
 void setVibration(int distanceCm) {
   if (distanceCm < 0 || distanceCm >= sonarFarCm) {
     // No obstacle in range — motor off
-    ledcWrite(VIBRATION_PWM_CHANNEL, 0);
+    ledcWrite(PIN_VIBRATION, 0);
     return;
   }
 
   if (distanceCm <= sonarNearCm) {
     // At or closer than near threshold — max vibration
-    ledcWrite(VIBRATION_PWM_CHANNEL, VIBRATION_MAX_DUTY);
+    ledcWrite(PIN_VIBRATION, VIBRATION_MAX_DUTY);
     return;
   }
 
@@ -113,10 +111,10 @@ void setVibration(int distanceCm) {
              (int)(ratio * (VIBRATION_MAX_DUTY - VIBRATION_MIN_DUTY));
   duty = constrain(duty, VIBRATION_MIN_DUTY, VIBRATION_MAX_DUTY);
 
-  ledcWrite(VIBRATION_PWM_CHANNEL, duty);
+  ledcWrite(PIN_VIBRATION, duty);
 }
 
 // ─── Stop vibration immediately
 // ─────────────────────────────────────────────── Called when entering SOS
 // state or BLE reconnect state.
-void stopVibration() { ledcWrite(VIBRATION_PWM_CHANNEL, 0); }
+void stopVibration() { ledcWrite(PIN_VIBRATION, 0); }

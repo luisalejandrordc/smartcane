@@ -40,12 +40,11 @@
 
 // Distance thresholds — default sensitivity (MEDIUM).
 // These will be overridden by app config when connected.
-#define SONAR_NEAR_CM_DEFAULT 50 // Closer than this = max vibration
-#define SONAR_FAR_CM_DEFAULT 200 // Farther than this = no vibration
+#define SONAR_NEAR_CM_DEFAULT 20 // Closer than this = max vibration
+#define SONAR_FAR_CM_DEFAULT 100 // Farther than this = no vibration
 
 // ─── Vibration Motor (PWM)
 // ────────────────────────────────────────────────────
-#define VIBRATION_PWM_CHANNEL 0    // ESP32 LEDC channel
 #define VIBRATION_PWM_FREQ 5000    // Hz
 #define VIBRATION_PWM_RESOLUTION 8 // bits (0–255)
 #define VIBRATION_MIN_DUTY 60      // Minimum duty to actually spin the motor
