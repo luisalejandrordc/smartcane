@@ -8,6 +8,9 @@
 // ────────────────
 int sonarNearCm = SONAR_NEAR_CM_DEFAULT; // ≤ this → max vibration
 int sonarFarCm = SONAR_FAR_CM_DEFAULT;   // ≥ this → no vibration
+int _vibMinDuty = VIBRATION_MIN_DUTY;
+int _vibMaxDuty = VIBRATION_MAX_DUTY;
+extern bool buzzerEnabled;
 
 // ─── Init
 // ─────────────────────────────────────────────────────────────────────
@@ -97,7 +100,7 @@ void setVibration(int distanceCm) {
 
   if (distanceCm <= sonarNearCm) {
     // At or closer than near threshold — max vibration
-    ledcWrite(PIN_VIBRATION, VIBRATION_MAX_DUTY);
+    ledcWrite(PIN_VIBRATION, _vibMaxDuty);
     return;
   }
 
@@ -107,11 +110,16 @@ void setVibration(int distanceCm) {
                         (float)(sonarFarCm - sonarNearCm));
 
   // Map ratio to duty cycle range [VIBRATION_MIN_DUTY, VIBRATION_MAX_DUTY]
-  int duty = VIBRATION_MIN_DUTY +
-             (int)(ratio * (VIBRATION_MAX_DUTY - VIBRATION_MIN_DUTY));
-  duty = constrain(duty, VIBRATION_MIN_DUTY, VIBRATION_MAX_DUTY);
+  int duty = _vibMinDuty + (int)(ratio * (_vibMaxDuty - _vibMinDuty));
+  duty = constrain(duty, _vibMinDuty, _vibMaxDuty);
 
   ledcWrite(PIN_VIBRATION, duty);
+
+  if (buzzerEnabled && distanceCm <= BUZZER_NEAR_CM_DEFAULT) {
+    digitalWrite(PIN_BUZZER, HIGH);
+  } else {
+    digitalWrite(PIN_BUZZER, LOW);
+  }
 }
 
 // ─── Stop vibration immediately

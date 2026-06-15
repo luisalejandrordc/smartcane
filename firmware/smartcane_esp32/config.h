@@ -40,8 +40,8 @@
 
 // Distance thresholds — default sensitivity (MEDIUM).
 // These will be overridden by app config when connected.
-#define SONAR_NEAR_CM_DEFAULT 20 // Closer than this = max vibration
-#define SONAR_FAR_CM_DEFAULT 100 // Farther than this = no vibration
+#define SONAR_NEAR_CM_DEFAULT 30 // Closer than this = max vibration
+#define SONAR_FAR_CM_DEFAULT 120 // Farther than this = no vibration
 
 // ─── Vibration Motor (PWM)
 // ────────────────────────────────────────────────────

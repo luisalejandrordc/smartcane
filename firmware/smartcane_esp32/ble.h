@@ -79,8 +79,7 @@ class WriteCallbacks : public BLECharacteristicCallbacks {
       sosResponseSuccess = false;
 
     } else if (value.startsWith("CFG:")) {
-      // Config message — handled in Phase 2H
-      // applyAppConfig(value);
+      applyAppConfig(value);
 
     } else {
       Serial.println("[BLE] Unknown message — ignored.");

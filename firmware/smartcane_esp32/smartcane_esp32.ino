@@ -21,6 +21,7 @@
 #include "sonar.h"
 #include "battery.h"
 #include "gps.h"
+#include "appconfig.h"
 #include "button.h"
 
 // ─── Global State ─────────────────────────────────────────────────────────────
@@ -70,7 +71,7 @@ void     initGPS();
 void     triggerSOS();
 bool     acquireGPSFix(float &lat, float &lon);
 
-// 2H — Config
+// Config
 void     applyAppConfig(String configMessage);
 void     updateSonarThresholds();
 
@@ -86,6 +87,14 @@ void setup() {
   initButton();
   initGPS();
   initBLE();
+
+  pinMode(PIN_BUZZER, OUTPUT);
+  digitalWrite(PIN_BUZZER, LOW);
+
+  // Apply defaults explicitly so sonar thresholds match config levels
+  applyVibrationLevel(DEFAULT_VIBRATION_LEVEL);
+  applySensitivityLevel(DEFAULT_SENSITIVITY_LEVEL);
+  applyBuzzerEnabled(DEFAULT_BUZZER_ENABLED);
 
   playAudio(AUDIO_WELCOME);
   waitForAudioFinish();
