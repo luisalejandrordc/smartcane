@@ -129,12 +129,12 @@ void checkAndAlertBattery() {
   if (percent <= BATTERY_LOW_THRESHOLD_2 && !_lowWarning10Sent) {
     _lowWarning10Sent = true;
     _lowWarning20Sent = true; // Mark both so 20% doesn't fire after 10%
-    // playAudio(AUDIO_BATTERY_10);
+    playAudio(AUDIO_BATTERY_10);
     Serial.println("[BATTERY] Critical battery warning played.");
 
   } else if (percent <= BATTERY_LOW_THRESHOLD_1 && !_lowWarning20Sent) {
     _lowWarning20Sent = true;
-    // playAudio(AUDIO_BATTERY_20);
+    playAudio(AUDIO_BATTERY_20);
     Serial.println("[BATTERY] Low battery warning played.");
   }
 }

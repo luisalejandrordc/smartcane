@@ -15,6 +15,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #include "config.h"
+#include "dfplayer.h"
 #include "sonar.h"
 #include "battery.h"
 
@@ -104,14 +105,16 @@ void setup() {
 
 
   // Sub-phase inits will be added here one by one:
-  // initDFPlayer();   // 2D
+  initDFPlayer();   // 2D
   initSonar();      // 2B
   initBattery();    // 2C
   // initButton();     // 2E
   // initGPS();        // 2G
   // initBLE();        // 2F
 
-  // playAudio(AUDIO_WELCOME);  // 2D
+  // Welcome message — blocking so user hears it fully before anything else
+  playAudio(AUDIO_WELCOME);
+  waitForAudioFinish();
 
   // ── CALIBRATION TEST (remove after calibrating) ──
   // Measure actual battery voltage with a multimeter.
