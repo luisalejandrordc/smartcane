@@ -59,14 +59,17 @@
 // ─────────────────────────────────────────────────────── Voltage divider:
 // R1=100kΩ, R2=100kΩ → divides battery voltage by 2 ESP32 ADC reference: 3.3V,
 // 12-bit resolution (0–4095)
+// Battery range: 3.0V–4.2V → pin range: 1.5V–2.1V
+// ESP32 ADC with ADC_11db attenuation reads 0–3.9V (safe for our 2.1V max)
 #define BATTERY_ADC_RESOLUTION 4095.0f
-#define BATTERY_ADC_VREF 3.3f
+#define BATTERY_ADC_VREF 3.3f      // Effective reference with 11db atten
 #define BATTERY_DIVIDER_RATIO 2.0f // Vout = Vbat / 2
 #define BATTERY_MAX_VOLTAGE 4.2f   // 18650 fully charged
 #define BATTERY_MIN_VOLTAGE 3.0f   // 18650 cutoff (don't discharge below this)
 #define BATTERY_CHECK_INTERVAL_MS 60000 // Check battery every 60 seconds
 #define BATTERY_LOW_THRESHOLD_1 20      // First low battery warning  (%)
 #define BATTERY_LOW_THRESHOLD_2 10      // Critical battery warning   (%)
+#define BATTERY_ADC_OFFSET 0.172f       // Adjust if multimeter vs code differs
 
 // ─── GPS
 // ──────────────────────────────────────────────────────────────────────

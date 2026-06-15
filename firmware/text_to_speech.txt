@@ -1,0 +1,36 @@
+Website used for TTS (Text-to-Speech):
+https://luvvoice.com/
+
+Language:
+English (United States)
+
+Voice:
+Ava (Female)
+
+Volume:
+Maximum possible
+
+Phrases:
+Index Content
+0001	"Welcome. SmartCane is starting up."
+0002	"Connecting to phone application..."
+0003	"Connected successfully."
+0004	"Could not connect. Retrying..."
+0005	"Running without Bluetooth connection."
+0006	"Connection lost. Attempting to reconnect."
+0007	"Battery: 100%"
+0008	"Battery: 90%"
+0009	"Battery: 80%"
+0010	"Battery: 70%"
+0011	"Battery: 60%"
+0012	"Battery: 50%"
+0013	"Battery: 40%"
+0014	"Battery: 30%"
+0015	"Low battery. 20% remaining."
+0016	"Critical battery. 10% remaining."
+0017	"SOS alert triggered. Getting location..."
+0018	"Could not get GPS location. Alert not sent."
+0019	"SOS alert sent successfully."
+0020	"SOS alert failed to send."
+0021	"Configuration received from app."
+

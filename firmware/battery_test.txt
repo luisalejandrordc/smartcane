@@ -1,0 +1,5 @@
+Testing Battery Voltage Readings
+Read by ESP32 -> Read by Voltmeter
+3.692 -> 3.864 (diff 0.172V)
+3.607 -> 3.779 (diff 0.172V)
+Offset of 0.172V

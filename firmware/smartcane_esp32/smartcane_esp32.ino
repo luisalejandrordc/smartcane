@@ -16,6 +16,7 @@
 
 #include "config.h"
 #include "sonar.h"
+#include "battery.h"
 
 // ─── Libraries ────────────────────────────────────────────────────────────────
 // These will be uncommented as each sub-phase introduces them.
@@ -105,12 +106,22 @@ void setup() {
   // Sub-phase inits will be added here one by one:
   // initDFPlayer();   // 2D
   initSonar();      // 2B
-  // initBattery();    // 2C
+  initBattery();    // 2C
   // initButton();     // 2E
   // initGPS();        // 2G
   // initBLE();        // 2F
 
   // playAudio(AUDIO_WELCOME);  // 2D
+
+  // ── CALIBRATION TEST (remove after calibrating) ──
+  // Measure actual battery voltage with a multimeter.
+  // Compare to what the code calculates.
+  // Adjust BATTERY_ADC_VREF or add an offset constant if needed.
+  // Serial.println("[CAL] Reading battery 100 times:");
+  // for (int i = 0; i < 100; i++) {
+  //   readBatteryPercent();
+  //   delay(500);
+  // }
 
   currentState = STATE_RUNNING;
   Serial.println("=== Boot complete. Entering main loop. ===");
@@ -141,17 +152,16 @@ void loop() {
         Serial.print(distance);
         Serial.println(" cm");
       }
-      break;
 
       // 2E: Check button (short = battery, long = SOS)
       // handleButton();
 
-
       // 2C: Periodic battery check
-      // if (millis() - lastBatteryCheckMs >= BATTERY_CHECK_INTERVAL_MS) {
-      //   lastBatteryCheckMs = millis();
-      //   checkAndAlertBattery();
-      // }
+      if (millis() - lastBatteryCheckMs >= BATTERY_CHECK_INTERVAL_MS) {
+        lastBatteryCheckMs = millis();
+        checkAndAlertBattery();
+      }
+
       break;
 
     case STATE_SOS:
