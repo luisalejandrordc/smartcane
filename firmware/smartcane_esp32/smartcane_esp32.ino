@@ -20,6 +20,7 @@
 #include "ble.h"
 #include "sonar.h"
 #include "battery.h"
+#include "gps.h"
 #include "button.h"
 
 // ─── Global State ─────────────────────────────────────────────────────────────
@@ -39,8 +40,6 @@ unsigned long lastBatteryCheckMs  = 0;
 unsigned long lastSonarCycleMs    = 0;
 
 // ─── Function Declarations ────────────────────────────────────────────────────
-// Defined in sub-phase files; declared here so the compiler sees them all.
-
 // Obstacle detection
 void     initSonar();
 int      measureDistanceCm();
@@ -66,7 +65,7 @@ void     initBLE();
 void     handleBLEConnection();
 void     sendBLENotification(String message);
 
-// 2G — GPS + SOS
+// GPS + SOS
 void     initGPS();
 void     triggerSOS();
 bool     acquireGPSFix(float &lat, float &lon);
@@ -78,19 +77,16 @@ void     updateSonarThresholds();
 // ─── Setup ────────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
-  delay(1000);  // Give time to the Serial Monitor to open and establish connection
+  delay(1000);  // Give The Serial Monitor time to open and establish connection
   Serial.println("=== SmartCane Booting ===");
 
+  initDFPlayer();
+  initSonar();
+  initBattery();
+  initButton();
+  initGPS();
+  initBLE();
 
-  // Sub-phase inits will be added here one by one:
-  initDFPlayer();   // 2D
-  initSonar();      // 2B
-  initBattery();    // 2C
-  initButton();     // 2E
-  // initGPS();        // 2G
-  initBLE();        // 2F
-
-  // Welcome message — blocking so user hears it fully before anything else
   playAudio(AUDIO_WELCOME);
   waitForAudioFinish();
 
@@ -103,7 +99,6 @@ void loop() {
   switch (currentState) {
 
     case STATE_BOOT:
-      // Should not linger here — setup() transitions out of BOOT
       break;
 
     case STATE_BLE_CONNECTING:
@@ -113,7 +108,6 @@ void loop() {
 
     case STATE_RUNNING:
 
-      // Check for mid-session disconnect
       if (pendingReconnect && !bleSkipped) {
         handleMidSessionReconnect();
         break;
@@ -121,6 +115,7 @@ void loop() {
 
       // Check button (short = battery, long = SOS)
       handleButton();
+      feedGPS();        // keeps GPS warm continuously
 
       // Measure distance and control vibration
       if (millis() - lastSonarCycleMs >= SONAR_CYCLE_MS) {
@@ -141,10 +136,7 @@ void loop() {
       break;
 
     case STATE_SOS:
-      // triggerSOS();  // Phase 2G — will be called here
-      // For now, bounce back to RUNNING so we're not stuck
-      Serial.println("[SOS] Placeholder — returning to RUNNING.");
-      currentState = STATE_RUNNING;
+      triggerSOS();
       break;
   }
 }

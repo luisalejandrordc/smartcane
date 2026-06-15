@@ -18,12 +18,12 @@
 #define PIN_ECHO 5         // HC-SR04 echo   (via logic level shifter)
 #define PIN_BUTTON 15      // SOS / battery button (INPUT_PULLUP, to GND)
 #define PIN_VIBRATION 18   // MOSFET gate — PWM vibration motor control
-#define PIN_DFPLAYER_TX 16 // ESP32 TX → DFPlayer RX (via 1kΩ resistor)
-#define PIN_DFPLAYER_RX 17 // ESP32 RX ← DFPlayer TX
+#define PIN_DFPLAYER_TX 25 // ESP32 TX → DFPlayer RX (via 1kΩ resistor)
+#define PIN_DFPLAYER_RX 26 // ESP32 RX ← DFPlayer TX
 #define PIN_BATTERY_ADC 34 // Voltage divider output (input-only ADC pin)
 #define PIN_BUZZER 26      // Buzzer (direct or via 2N2222)
-#define PIN_GPS_TX 9       // ESP32 TX → Neo M6 RX
-#define PIN_GPS_RX 10      // ESP32 RX ← Neo M6 TX
+#define PIN_GPS_RX 16      // ESP32 RX ← Neo M6 TX
+#define PIN_GPS_TX 17      // ESP32 TX → Neo M6 RX
 
 // ─── Button Timing
 // ────────────────────────────────────────────────────────────
