@@ -18,6 +18,8 @@
 #include "dfplayer.h"
 #include "sonar.h"
 #include "battery.h"
+#include "button.h"
+#include "state.h"
 
 // ─── Libraries ────────────────────────────────────────────────────────────────
 // These will be uncommented as each sub-phase introduces them.
@@ -34,12 +36,12 @@
 // ─── Global State ─────────────────────────────────────────────────────────────
 
 // System mode — tracks what the system is currently doing
-enum SystemState {
-  STATE_BOOT,               // Initial startup sequence
-  STATE_BLE_CONNECTING,     // Trying to connect to phone
-  STATE_RUNNING,            // Normal operation (with or without BLE)
-  STATE_SOS                 // SOS triggered, acquiring GPS + sending alert
-};
+// enum SystemState {
+//   STATE_BOOT,               // Initial startup sequence
+//   STATE_BLE_CONNECTING,     // Trying to connect to phone
+//   STATE_RUNNING,            // Normal operation (with or without BLE)
+//   STATE_SOS                 // SOS triggered, acquiring GPS + sending alert
+// };
 
 SystemState currentState = STATE_BOOT;
 
@@ -108,7 +110,7 @@ void setup() {
   initDFPlayer();   // 2D
   initSonar();      // 2B
   initBattery();    // 2C
-  // initButton();     // 2E
+  initButton();     // 2E
   // initGPS();        // 2G
   // initBLE();        // 2F
 
@@ -140,17 +142,18 @@ void loop() {
 
     case STATE_BLE_CONNECTING:
       // 2F: Attempt BLE connection, retry loop, handle skip
-      // handleBLEConnection();
+      // handleBLEConnection();  // Phase 2F
+      handleButton();            // ← Needed here for BLE skip (Phase 2F context)
       break;
 
     case STATE_RUNNING:
+      handleButton();
+
       // 2B: Measure distance and control vibration
       if (millis() - lastSonarCycleMs >= SONAR_CYCLE_MS) {
         lastSonarCycleMs = millis();
         int distance = measureDistanceCm();
         setVibration(distance);
-
-        // Debug output — remove or comment out in final firmware
         Serial.print("[SONAR] Distance: ");
         Serial.print(distance);
         Serial.println(" cm");
@@ -168,8 +171,10 @@ void loop() {
       break;
 
     case STATE_SOS:
-      // 2G: GPS acquisition + BLE transmission + audio feedback
-      // triggerSOS() transitions back to STATE_RUNNING when done
+      // triggerSOS();  // Phase 2G — will be called here
+      // For now, bounce back to RUNNING so we're not stuck
+      Serial.println("[SOS] Placeholder — returning to RUNNING.");
+      currentState = STATE_RUNNING;
       break;
   }
 }
