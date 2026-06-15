@@ -92,7 +92,7 @@ void handleButton() {
 
         if (currentState == STATE_BLE_CONNECTING) {
           Serial.println("[BUTTON] Short press during BLE connect → skip BLE.");
-          // skipBLEConnection(); // Phase 2F
+          skipBLEConnection(); // Phase 2F
 
         } else if (currentState == STATE_RUNNING) {
           Serial.println("[BUTTON] Short press → battery report.");

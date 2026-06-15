@@ -3,7 +3,7 @@
 //  ESP32 Arduino IDE
 //
 //  Sub-phases:
-//    2A: Skeleton (current)
+//    2A: Skeleton
 //    2B: Obstacle detection + vibration
 //    2C: Battery monitoring
 //    2D: DFPlayer Mini audio
@@ -15,39 +15,15 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #include "config.h"
+#include "state.h"
 #include "dfplayer.h"
+#include "ble.h"
 #include "sonar.h"
 #include "battery.h"
 #include "button.h"
-#include "state.h"
-
-// ─── Libraries ────────────────────────────────────────────────────────────────
-// These will be uncommented as each sub-phase introduces them.
-// Listed here so you can install them all now via Library Manager.
-
-// #include <BLEDevice.h>          // Built-in ESP32 BLE (no install needed)
-// #include <BLEServer.h>
-// #include <BLEUtils.h>
-// #include <BLE2902.h>
-// #include <DFRobotDFPlayerMini.h> // Install: "DFRobotDFPlayerMini" by DFRobot
-// #include <TinyGPSPlus.h>         // Install: "TinyGPSPlus" by Mikal Hart
-// #include <HardwareSerial.h>      // Built-in
 
 // ─── Global State ─────────────────────────────────────────────────────────────
-
-// System mode — tracks what the system is currently doing
-// enum SystemState {
-//   STATE_BOOT,               // Initial startup sequence
-//   STATE_BLE_CONNECTING,     // Trying to connect to phone
-//   STATE_RUNNING,            // Normal operation (with or without BLE)
-//   STATE_SOS                 // SOS triggered, acquiring GPS + sending alert
-// };
-
 SystemState currentState = STATE_BOOT;
-
-// BLE connection flag
-bool bleConnected   = false;
-bool bleSkipped     = false;  // User chose to run without BLE
 
 // App-configured parameters (defaults from config.h, overridden by app)
 int  vibrationLevel   = DEFAULT_VIBRATION_LEVEL;
@@ -65,27 +41,27 @@ unsigned long lastSonarCycleMs    = 0;
 // ─── Function Declarations ────────────────────────────────────────────────────
 // Defined in sub-phase files; declared here so the compiler sees them all.
 
-// 2B — Obstacle detection
+// Obstacle detection
 void     initSonar();
 int      measureDistanceCm();
 void     setVibration(int distanceCm);
 
-// 2C — Battery
+// Battery
 void     initBattery();
 int      readBatteryPercent();
 void     checkAndAlertBattery();
 void     reportBatteryToUser();
 
-// 2D — Audio
+// Audio
 void     initDFPlayer();
 void     playAudio(int trackIndex);
 void     waitForAudioFinish();
 
-// 2E — Button
+// Button
 void     initButton();
 void     handleButton();
 
-// 2F — BLE
+// BLE
 void     initBLE();
 void     handleBLEConnection();
 void     sendBLENotification(String message);
@@ -112,23 +88,13 @@ void setup() {
   initBattery();    // 2C
   initButton();     // 2E
   // initGPS();        // 2G
-  // initBLE();        // 2F
+  initBLE();        // 2F
 
   // Welcome message — blocking so user hears it fully before anything else
   playAudio(AUDIO_WELCOME);
   waitForAudioFinish();
 
-  // ── CALIBRATION TEST (remove after calibrating) ──
-  // Measure actual battery voltage with a multimeter.
-  // Compare to what the code calculates.
-  // Adjust BATTERY_ADC_VREF or add an offset constant if needed.
-  // Serial.println("[CAL] Reading battery 100 times:");
-  // for (int i = 0; i < 100; i++) {
-  //   readBatteryPercent();
-  //   delay(500);
-  // }
-
-  currentState = STATE_RUNNING;
+  currentState = STATE_BLE_CONNECTING;
   Serial.println("=== Boot complete. Entering main loop. ===");
 }
 
@@ -141,15 +107,22 @@ void loop() {
       break;
 
     case STATE_BLE_CONNECTING:
-      // 2F: Attempt BLE connection, retry loop, handle skip
-      // handleBLEConnection();  // Phase 2F
-      handleButton();            // ← Needed here for BLE skip (Phase 2F context)
+      handleBLEConnection();
+      handleButton(); // Allows short press to skip
       break;
 
     case STATE_RUNNING:
+
+      // Check for mid-session disconnect
+      if (pendingReconnect && !bleSkipped) {
+        handleMidSessionReconnect();
+        break;
+      }
+
+      // Check button (short = battery, long = SOS)
       handleButton();
 
-      // 2B: Measure distance and control vibration
+      // Measure distance and control vibration
       if (millis() - lastSonarCycleMs >= SONAR_CYCLE_MS) {
         lastSonarCycleMs = millis();
         int distance = measureDistanceCm();
@@ -159,10 +132,7 @@ void loop() {
         Serial.println(" cm");
       }
 
-      // 2E: Check button (short = battery, long = SOS)
-      // handleButton();
-
-      // 2C: Periodic battery check
+      // Periodic battery check
       if (millis() - lastBatteryCheckMs >= BATTERY_CHECK_INTERVAL_MS) {
         lastBatteryCheckMs = millis();
         checkAndAlertBattery();
