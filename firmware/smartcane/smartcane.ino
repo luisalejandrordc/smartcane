@@ -15,7 +15,7 @@
 
 // ─── Global state ─────────────────────────────────────────────────────────────
 SystemState currentState = STATE_BOOT;
-bool        buzzerEnabled = DEFAULT_BUZZER_ENABLED;
+bool buzzerEnabled = DEFAULT_BUZZER_ENABLED;
 
 // ─── Timing ───────────────────────────────────────────────────────────────────
 unsigned long lastBatteryCheckMs = 0;
