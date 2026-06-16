@@ -5,15 +5,13 @@
 #include "config.h"
 #include <DFRobotDFPlayerMini.h>
 
-// ─── Hardware Serial for DFPlayer
-// ───────────────────────────────────────────── We use Serial1 (ESP32 has 3
-// hardware UARTs). Serial0 = USB debug, Serial1 = DFPlayer, Serial2 = GPS
-// (Phase 2G)
+// ─── Hardware Serial for DFPlayer ─────────────────────────────────────────────
+// We use Serial1 (ESP32 has 3 hardware UARTs). 
+// Serial0 = USB debug, Serial1 = DFPlayer, Serial2 = GPS
 HardwareSerial dfSerial(1);
 DFRobotDFPlayerMini dfPlayer;
 
-// ─── Internal state
-// ───────────────────────────────────────────────────────────
+// ─── Internal state ────────────────────────────────────────────────────────────
 bool dfPlayerReady = false;
 bool audioPlaying = false;
 int currentTrack = 0;
@@ -47,17 +45,14 @@ const int AUDIO_DURATIONS_MS[] = {
     3200, // 21 - Config received
 };
 
-// ─── Init
-// ─────────────────────────────────────────────────────────────────────
+// ─── Init ──────────────────────────────────────────────────────────────────────
 void initDFPlayer() {
   // TX=PIN_DFPLAYER_TX, RX=PIN_DFPLAYER_RX
-  dfSerial.begin(DFPLAYER_BAUD_RATE, SERIAL_8N1, PIN_DFPLAYER_RX,
-                 PIN_DFPLAYER_TX);
+  dfSerial.begin(DFPLAYER_BAUD_RATE, SERIAL_8N1, PIN_DFPLAYER_RX, PIN_DFPLAYER_TX);
   delay(1000); // DFPlayer needs time to initialize after power-on
 
   if (!dfPlayer.begin(dfSerial, true, true)) {
-    Serial.println(
-        "[DFPLAYER] ERROR: Could not initialize. Check wiring and SD card.");
+    DEBUG_PRINTLN("[DFPLAYER] ERROR: Could not initialize. Check wiring and SD card.");
     dfPlayerReady = false;
     return;
   }
@@ -65,28 +60,27 @@ void initDFPlayer() {
   dfPlayer.volume(DFPLAYER_VOLUME);
   dfPlayer.EQ(DFPLAYER_EQ_NORMAL);
   dfPlayerReady = true;
-  Serial.println("[DFPLAYER] Ready.");
+  DEBUG_PRINTLN("[DFPLAYER] Ready.");
 }
 
-// ─── Play a track by index
-// ──────────────────────────────────────────────────── Non-blocking — returns
-// immediately. Use isAudioPlaying() to check status.
+// ─── Play a track by index ────────────────────────────────────────────────────
+// Non-blocking — returns immediately. Use isAudioPlaying() to check status.
 void playAudio(int trackIndex) {
   if (!dfPlayerReady) {
-    Serial.print("[DFPLAYER] Skipping track ");
-    Serial.print(trackIndex);
-    Serial.println(" — player not ready.");
+    DEBUG_PRINT("[DFPLAYER] Skipping track ");
+    DEBUG_PRINT(trackIndex);
+    DEBUG_PRINTLN(" — player not ready.");
     return;
   }
 
   if (trackIndex < 1 || trackIndex > 21) {
-    Serial.print("[DFPLAYER] Invalid track index: ");
-    Serial.println(trackIndex);
+    DEBUG_PRINT("[DFPLAYER] Invalid track index: ");
+    DEBUG_PRINTLN(trackIndex);
     return;
   }
 
-  Serial.print("[DFPLAYER] Playing track ");
-  Serial.println(trackIndex);
+  DEBUG_PRINT("[DFPLAYER] Playing track ");
+  DEBUG_PRINTLN(trackIndex);
 
   dfPlayer.play(trackIndex);
   audioPlaying = true;
@@ -98,8 +92,9 @@ void playAudio(int trackIndex) {
 // DFPlayer Mini's busy pin is unreliable on some modules.
 // We use estimated duration instead — simpler and more robust.
 bool isAudioPlaying() {
-  if (!audioPlaying)
+  if (!audioPlaying) {
     return false;
+  }
 
   int duration = (currentTrack < 22) ? AUDIO_DURATIONS_MS[currentTrack] : 3000;
   if (millis() - audioStartMs >= (unsigned long)duration) {
@@ -120,10 +115,10 @@ void waitForAudioFinish() {
   }
 }
 
-// ─── Stop audio immediately
-// ───────────────────────────────────────────────────
+// ─── Stop audio immediately ───────────────────────────────────────────────────
 void stopAudio() {
-  if (dfPlayerReady)
+  if (dfPlayerReady) {
     dfPlayer.stop();
+  }
   audioPlaying = false;
 }

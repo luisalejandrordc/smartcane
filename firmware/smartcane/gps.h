@@ -7,47 +7,45 @@
 #include <HardwareSerial.h>
 #include <TinyGPSPlus.h>
 
-// ─── GPS objects
-// ──────────────────────────────────────────────────────────────
-TinyGPSPlus gps;
-HardwareSerial
-    gpsSerial(2); // UART2 — Serial0=USB, Serial1=DFPlayer, Serial2=GPS
+#define SOS_RESPONSE_TIMEOUT_MS 15000
 
-// ─── Forward declarations
-// ─────────────────────────────────────────────────────
+// ─── Forward declarations ──────────────────────────────────────────────────────
 void playAudio(int track);
 void waitForAudioFinish();
 void stopVibration();
 void sendBLENotification(String message);
+
+// ─── Externs from other modules ────────────────────────────────────────────────
 extern volatile bool sosResponseReceived;
 extern volatile bool sosResponseSuccess;
 extern bool bleConnected;
 extern bool bleSkipped;
 
-// ─── Init
-// ─────────────────────────────────────────────────────────────────────
+// ─── GPS objects ───────────────────────────────────────────────────────────────
+TinyGPSPlus gps;
+HardwareSerial gpsSerial(2); // UART2 — Serial0=USB, Serial1=DFPlayer, Serial2=GPS
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
 void initGPS() {
   gpsSerial.begin(GPS_BAUD_RATE, SERIAL_8N1, PIN_GPS_RX, PIN_GPS_TX);
-  Serial.println("[GPS] Initialized.");
+  DEBUG_PRINTLN("[GPS] Initialized.");
 }
 
-// ─── Feed GPS parser
-// ────────────────────────────────────────────────────────── Call this
-// regularly from loop() during normal operation so the GPS module stays warm
-// and has a fix ready when SOS is triggered. A warm GPS acquires a fix in
-// seconds; a cold one can take 1–2 minutes.
+// ─── Feed GPS parser ───────────────────────────────────────────────────────────
+// Call this regularly from loop() during normal operation so the GPS module 
+// stays warm and has a fix ready when SOS is triggered. A warm GPS acquires 
+// a fix in seconds; a cold one can take 1–2 minutes.
 void feedGPS() {
   while (gpsSerial.available()) {
     gps.encode(gpsSerial.read());
   }
 }
 
-// ─── Acquire a valid GPS fix
-// ────────────────────────────────────────────────── Blocks for up to
-// GPS_FIX_TIMEOUT_MS (20s) waiting for valid coordinates. Returns true and
-// populates lat/lon if successful, false on timeout.
+// ─── Acquire a valid GPS fix ───────────────────────────────────────────────────
+// Blocks for up to GPS_FIX_TIMEOUT_MS (20s) waiting for valid coordinates. 
+// Returns true and populates lat/lon if successful, false on timeout.
 bool acquireGPSFix(float &lat, float &lon) {
-  Serial.println("[GPS] Waiting for fix...");
+  DEBUG_PRINTLN("[GPS] Waiting for fix...");
   unsigned long startMs = millis();
 
   while (millis() - startMs < GPS_FIX_TIMEOUT_MS) {
@@ -58,17 +56,18 @@ bool acquireGPSFix(float &lat, float &lon) {
 
     // Valid fix: location updated, HDOP acceptable, satellite count reasonable
     if (gps.location.isValid() && gps.location.isUpdated() &&
-        gps.hdop.isValid() &&
-        gps.hdop.value() < 300 && // HDOP < 3.00 = good accuracy
+        gps.hdop.isValid() && gps.hdop.value() < 300 && // HDOP < 3.00 = good accuracy
         gps.satellites.isValid() && gps.satellites.value() >= 3) {
 
       lat = gps.location.lat();
       lon = gps.location.lng();
 
-      Serial.print("[GPS] Fix acquired: ");
-      Serial.print(lat, 6);
-      Serial.print(", ");
-      Serial.println(lon, 6);
+      DEBUG_PRINT("[GPS] Fix acquired: ");
+      // Wrapped in String() because DEBUG_PRINT only takes 1 argument
+      DEBUG_PRINT(String(lat, 6)); 
+      DEBUG_PRINT(", ");
+      DEBUG_PRINTLN(String(lon, 6));
+      
       return true;
     }
 
@@ -77,21 +76,20 @@ bool acquireGPSFix(float &lat, float &lon) {
     delay(100);
   }
 
-  Serial.println("[GPS] Fix timeout.");
+  DEBUG_PRINTLN("[GPS] Fix timeout.");
   return false;
 }
 
-// ─── SOS Pipeline
-// ───────────────────────────────────────────────────────────── Full flow:
+// ─── SOS Pipeline ──────────────────────────────────────────────────────────────
+// Full flow:
 //   1. Stop vibration + play SOS triggered audio
 //   2. Attempt GPS fix (20s timeout)
 //   3a. GPS fail → play fail audio → return to RUNNING
 //   3b. GPS success → send coordinates via BLE
 //   4. Wait for app response (OK/FAIL) with timeout
 //   5. Play result audio → return to RUNNING
-//
 void triggerSOS() {
-  Serial.println("[SOS] Pipeline started.");
+  DEBUG_PRINTLN("[SOS] Pipeline started.");
 
   // Step 1 — Stop motor, alert user
   stopVibration();
@@ -114,7 +112,7 @@ void triggerSOS() {
   // Step 3b — Build and send BLE message
   // If BLE is not connected (user skipped or dropped), we can't send.
   if (!bleConnected) {
-    Serial.println("[SOS] BLE not connected — cannot send alert.");
+    DEBUG_PRINTLN("[SOS] BLE not connected — cannot send alert.");
     playAudio(AUDIO_SOS_FAIL);
     waitForAudioFinish();
     currentState = STATE_RUNNING;
@@ -132,29 +130,27 @@ void triggerSOS() {
   sosResponseSuccess = false;
 
   sendBLENotification(message);
-  Serial.println("[SOS] Coordinates sent. Waiting for app response...");
+  DEBUG_PRINTLN("[SOS] Coordinates sent. Waiting for app response...");
 
-// Step 4 — Wait for OK/FAIL from app (15s timeout)
-#define SOS_RESPONSE_TIMEOUT_MS 15000
+  // Step 4 — Wait for OK/FAIL from app
   unsigned long waitStart = millis();
 
-  while (!sosResponseReceived &&
-         millis() - waitStart < SOS_RESPONSE_TIMEOUT_MS) {
+  while (!sosResponseReceived && (millis() - waitStart < SOS_RESPONSE_TIMEOUT_MS)) {
     yield();
     delay(100);
   }
 
   // Step 5 — Play result audio
   if (!sosResponseReceived) {
-    Serial.println("[SOS] No response from app within timeout.");
+    DEBUG_PRINTLN("[SOS] No response from app within timeout.");
     playAudio(AUDIO_SOS_FAIL);
 
   } else if (sosResponseSuccess) {
-    Serial.println("[SOS] Alert sent successfully.");
+    DEBUG_PRINTLN("[SOS] Alert sent successfully.");
     playAudio(AUDIO_SOS_SUCCESS);
 
   } else {
-    Serial.println("[SOS] Alert failed to send.");
+    DEBUG_PRINTLN("[SOS] Alert failed to send.");
     playAudio(AUDIO_SOS_FAIL);
   }
 

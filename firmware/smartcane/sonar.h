@@ -4,16 +4,14 @@
 #pragma once
 #include "config.h"
 
-// ─── Runtime thresholds (overridden by app config in Phase 2H)
-// ────────────────
+// ─── Runtime thresholds (overridden by app config) ─────────────────────────────
 int sonarNearCm = SONAR_NEAR_CM_DEFAULT; // ≤ this → max vibration
 int sonarFarCm = SONAR_FAR_CM_DEFAULT;   // ≥ this → no vibration
 int _vibMinDuty = VIBRATION_MIN_DUTY;
 int _vibMaxDuty = VIBRATION_MAX_DUTY;
 extern bool buzzerEnabled;
 
-// ─── Init
-// ─────────────────────────────────────────────────────────────────────
+// ─── Init ──────────────────────────────────────────────────────────────────────
 void initSonar() {
   pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_ECHO, INPUT);
@@ -23,12 +21,11 @@ void initSonar() {
   ledcAttach(PIN_VIBRATION, VIBRATION_PWM_FREQ, VIBRATION_PWM_RESOLUTION);
   ledcWrite(PIN_VIBRATION, 0); // Motor off at start
 
-  Serial.println("[SONAR] Initialized.");
+  DEBUG_PRINTLN("[SONAR] Initialized.");
 }
 
-// ─── Single raw pulse measurement
-// ───────────────────────────────────────────── Returns distance in cm, or -1
-// if out of valid range.
+// ─── Single raw pulse measurement ─────────────────────────────────────────────
+// Returns distance in cm, or -1 if out of valid range.
 int rawMeasureCm() {
   // Send 10µs trigger pulse
   digitalWrite(PIN_TRIG, LOW);
@@ -41,21 +38,22 @@ int rawMeasureCm() {
   // At 400cm, sound round-trip takes ~2330µs. We allow 25000µs to be safe.
   long duration = pulseIn(PIN_ECHO, HIGH, 25000);
 
-  if (duration == 0)
+  if (duration == 0) {
     return -1; // Timeout — no echo received
+  }
 
   int distanceCm = duration * 0.0343f / 2.0f;
 
-  if (distanceCm < SONAR_MIN_CM || distanceCm > SONAR_MAX_CM)
+  if (distanceCm < SONAR_MIN_CM || distanceCm > SONAR_MAX_CM) {
     return -1;
+  }
 
   return distanceCm;
 }
 
-// ─── Median of N samples (noise-filtered measurement)
-// ───────────────────────── Takes SONAR_SAMPLE_COUNT readings, discards invalid
-// ones, sorts the valid ones, returns the median. Returns -1 if fewer than 3
-// valid readings were obtained.
+// ─── Median of N samples (noise-filtered measurement) ─────────────────────────
+// Takes SONAR_SAMPLE_COUNT readings, discards invalid ones, sorts the valid ones,
+// and returns the median. Returns -1 if fewer than 3 valid readings were obtained.
 int measureDistanceCm() {
   int samples[SONAR_SAMPLE_COUNT];
   int validCount = 0;
@@ -87,10 +85,9 @@ int measureDistanceCm() {
   return samples[validCount / 2]; // Median value
 }
 
-// ─── Map distance to vibration intensity
-// ────────────────────────────────────── Linear interpolation between
-// sonarFarCm (no vibration) and sonarNearCm (max vibration). Accounts for
-// minimum motor spin-up duty.
+// ─── Map distance to vibration intensity ──────────────────────────────────────
+// Linear interpolation between sonarFarCm (no vibration) and sonarNearCm (max vibration).
+// Accounts for minimum motor spin-up duty.
 void setVibration(int distanceCm) {
   if (distanceCm < 0 || distanceCm >= sonarFarCm) {
     // No obstacle in range — motor off
@@ -122,7 +119,8 @@ void setVibration(int distanceCm) {
   }
 }
 
-// ─── Stop vibration immediately
-// ─────────────────────────────────────────────── Called when entering SOS
-// state or BLE reconnect state.
-void stopVibration() { ledcWrite(PIN_VIBRATION, 0); }
+// ─── Stop vibration immediately ───────────────────────────────────────────────
+// Called when entering SOS state or BLE reconnect state.
+void stopVibration() { 
+  ledcWrite(PIN_VIBRATION, 0); 
+}
