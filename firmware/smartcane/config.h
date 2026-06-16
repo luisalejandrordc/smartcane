@@ -56,7 +56,7 @@
 
 // ─── GPS ──────────────────────────────────────────────────────────────────────
 #define GPS_BAUD_RATE             9600
-#define GPS_FIX_TIMEOUT_MS        20000
+#define GPS_FIX_TIMEOUT_MS        40000
 
 // ─── DFPlayer Mini ────────────────────────────────────────────────────────────
 #define DFPLAYER_BAUD_RATE        9600
