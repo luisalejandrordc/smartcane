@@ -47,9 +47,8 @@ const int AUDIO_DURATIONS_MS[] = {
 
 // ─── Init ──────────────────────────────────────────────────────────────────────
 void initDFPlayer() {
-  // TX=PIN_DFPLAYER_TX, RX=PIN_DFPLAYER_RX
   dfSerial.begin(DFPLAYER_BAUD_RATE, SERIAL_8N1, PIN_DFPLAYER_RX, PIN_DFPLAYER_TX);
-  delay(1000); // DFPlayer needs time to initialize after power-on
+  delay(1500); // DFPlayer needs time to initialize after power-on
 
   if (!dfPlayer.begin(dfSerial, true, true)) {
     DEBUG_PRINTLN("[DFPLAYER] ERROR: Could not initialize. Check wiring and SD card.");

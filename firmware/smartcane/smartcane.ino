@@ -24,7 +24,7 @@ unsigned long lastSonarCycleMs   = 0;
 // ─── Setup ────────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
-  delay(1000);
+  delay(3000);
   DEBUG_PRINTLN("=== SmartCane v1.0 Booting ===");
 
   // Hardware init

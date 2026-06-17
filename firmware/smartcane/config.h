@@ -56,11 +56,11 @@
 
 // ─── GPS ──────────────────────────────────────────────────────────────────────
 #define GPS_BAUD_RATE             9600
-#define GPS_FIX_TIMEOUT_MS        40000
+#define GPS_FIX_TIMEOUT_MS        60000
 
 // ─── DFPlayer Mini ────────────────────────────────────────────────────────────
 #define DFPLAYER_BAUD_RATE        9600
-#define DFPLAYER_VOLUME           25
+#define DFPLAYER_VOLUME           22
 
 // ─── Audio Track Index Map ────────────────────────────────────────────────────
 #define AUDIO_WELCOME             1
