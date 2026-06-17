@@ -1,11 +1,26 @@
 import { Buffer } from "buffer";
 (globalThis as any).Buffer = Buffer;
 
+import "react-native-gesture-handler";
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Text, AppState } from "react-native";
+
 import { bleManager } from "./src/ble/BLEManager";
-import { buildConfigMessage, buildMapsLink } from "./src/ble/BLEConstants";
+import { sendSOSAlerts } from "./src/alerts/AlertManager";
+import { buildMapsLink } from "./src/ble/BLEConstants";
+import { loadConfig } from "./src/storage/Storage";
+import { buildConfigMessage } from "./src/ble/BLEConstants";
 import { ConnectionStatus, SOSStatus } from "./src/types";
+
+import { HomeScreen } from "./src/screens/HomeScreen";
+import { ContactsScreen } from "./src/screens/ContactsScreen";
+import { TelegramScreen } from "./src/screens/TelegramScreen";
+import { SettingsScreen } from "./src/screens/SettingsScreen";
+import { colors, fontSize } from "./src/theme";
+
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   const [connectionStatus, setConnectionStatus] =
@@ -15,115 +30,112 @@ export default function App() {
 
   useEffect(() => {
     bleManager.setCallbacks({
-      onConnectionStatusChange: (status) => {
-        console.log("Connection status:", status);
+      onConnectionStatusChange: async (status) => {
         setConnectionStatus(status);
+
+        // Re-send saved config whenever we connect
+        if (status === "connected") {
+          const config = await loadConfig();
+          const msg = buildConfigMessage(
+            config.vibrationLevel,
+            config.sensitivityLevel,
+            config.buzzerEnabled,
+          );
+          await bleManager.sendMessage(msg);
+        }
       },
 
       onSOSReceived: async (coords) => {
-        console.log("SOS received:", coords);
         setSOSStatus("receiving");
         setLastLocation(buildMapsLink(coords.lat, coords.lon));
 
-        // Phase 4 will handle actual alert sending here.
-        // For now, just respond OK so the ESP32 gets feedback.
-        setSOSStatus("sending");
-        await bleManager.sendMessage("OK");
-        setSOSStatus("success");
+        try {
+          setSOSStatus("sending");
+          const result = await sendSOSAlerts(coords.lat, coords.lon);
+
+          if (result.success) {
+            setSOSStatus("success");
+            await bleManager.sendMessage("OK");
+          } else {
+            setSOSStatus("failed");
+            await bleManager.sendMessage("FAIL");
+          }
+        } catch {
+          setSOSStatus("failed");
+          await bleManager.sendMessage("FAIL");
+        }
+
+        // Reset SOS status after 10 seconds
+        setTimeout(() => setSOSStatus("idle"), 10000);
       },
     });
 
     // Auto-start scanning on app launch
     bleManager.startScan();
 
+    // Re-scan when app comes to foreground after being backgrounded
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active" && connectionStatus === "disconnected") {
+        bleManager.startScan();
+      }
+    });
+
     return () => {
+      sub.remove();
       bleManager.disconnect();
     };
   }, []);
 
-  const sendTestConfig = async () => {
-    const msg = buildConfigMessage(2, 2, false);
-    await bleManager.sendMessage(msg);
-  };
+  // Tab bar icon helper (text-based, no icon library needed)
+  const icon =
+    (label: string) =>
+    ({ color }: { color: string }) => (
+      <Text style={{ fontSize: fontSize.lg, color }}>{label}</Text>
+    );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>SmartCane</Text>
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.textPrimary,
+          headerTitleStyle: { fontWeight: "600" },
+          tabBarStyle: {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+          },
+          tabBarActiveTintColor: colors.accent,
+          tabBarInactiveTintColor: colors.textMuted,
+        }}
+      >
+        <Tab.Screen name="Home" options={{ tabBarIcon: icon("◉") }}>
+          {() => (
+            <HomeScreen
+              connectionStatus={connectionStatus}
+              sosStatus={sosStatus}
+              lastLocation={lastLocation}
+            />
+          )}
+        </Tab.Screen>
 
-      <View style={styles.statusRow}>
-        <View
-          style={[
-            styles.statusDot,
-            {
-              backgroundColor:
-                connectionStatus === "connected" ? "#4CAF50" : "#F44336",
-            },
-          ]}
+        <Tab.Screen
+          name="Contacts"
+          component={ContactsScreen}
+          options={{ tabBarIcon: icon("☎") }}
         />
-        <Text style={styles.statusText}>{connectionStatus}</Text>
-      </View>
 
-      <Text style={styles.label}>SOS Status: {sosStatus}</Text>
+        <Tab.Screen
+          name="Telegram"
+          component={TelegramScreen}
+          options={{ tabBarIcon: icon("✈") }}
+        />
 
-      {lastLocation && (
-        <Text style={styles.label} numberOfLines={2}>
-          Last location: {lastLocation}
-        </Text>
-      )}
-
-      <TouchableOpacity style={styles.button} onPress={sendTestConfig}>
-        <Text style={styles.buttonText}>Send Test Config (2,2,off)</Text>
-      </TouchableOpacity>
-    </View>
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{ tabBarIcon: icon("⚙") }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 32,
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  statusText: {
-    fontSize: 18,
-    color: "#FFFFFF",
-    textTransform: "capitalize",
-  },
-  label: {
-    fontSize: 14,
-    color: "#AAAAAA",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  button: {
-    marginTop: 32,
-    backgroundColor: "#1E88E5",
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 12,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
