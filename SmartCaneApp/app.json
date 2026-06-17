@@ -1,28 +1,62 @@
 {
   "expo": {
-    "name": "SmartCaneApp",
-    "slug": "SmartCaneApp",
+    "name": "SmartCane",
+    "slug": "smartcane",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.luisalejandrordc.smartcane",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "SmartCane uses Bluetooth to connect to your smart cane device.",
+        "NSBluetoothPeripheralUsageDescription": "SmartCane uses Bluetooth to connect to your smart cane device.",
+        "UIBackgroundModes": [
+          "bluetooth-central",
+          "bluetooth-central"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.luisalejandrordc.smartcane",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "plugins": [
-      "react-native-ble-plx"
-    ]
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": [
+            "peripheral",
+            "central"
+          ],
+          "bluetoothAlwaysPermission": "Allow SmartCane to connect to your cane device"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "76dcebb6-aac0-4efb-8f00-1e49ebbb9872"
+      }
+    }
   }
 }
