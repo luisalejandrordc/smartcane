@@ -6,19 +6,13 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "ios": {
       "bundleIdentifier": "com.luisalejandrordc.smartcane",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "SmartCane uses Bluetooth to connect to your smart cane device.",
         "NSBluetoothPeripheralUsageDescription": "SmartCane uses Bluetooth to connect to your smart cane device.",
-        "UIBackgroundModes": [
-          "bluetooth-central",
-          "bluetooth-central"
-        ],
+        "UIBackgroundModes": ["bluetooth-central"],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -45,10 +39,7 @@
         "react-native-ble-plx",
         {
           "isBackgroundEnabled": true,
-          "modes": [
-            "peripheral",
-            "central"
-          ],
+          "modes": ["peripheral", "central"],
           "bluetoothAlwaysPermission": "Allow SmartCane to connect to your cane device"
         }
       ]
