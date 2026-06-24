@@ -29,10 +29,10 @@
 // ─── HC-SR04 ──────────────────────────────────────────────────────────────────
 #define SONAR_SAMPLE_COUNT        7
 #define SONAR_CYCLE_MS            80
-#define SONAR_MIN_CM              5
+#define SONAR_MIN_CM              2
 #define SONAR_MAX_CM              400
-#define SONAR_NEAR_CM_DEFAULT     30
-#define SONAR_FAR_CM_DEFAULT      120
+#define SONAR_NEAR_CM_DEFAULT     10
+#define SONAR_FAR_CM_DEFAULT      50
 
 // ─── Vibration Motor ──────────────────────────────────────────────────────────
 #define VIBRATION_PWM_FREQ        5000
@@ -56,7 +56,7 @@
 
 // ─── GPS ──────────────────────────────────────────────────────────────────────
 #define GPS_BAUD_RATE             9600
-#define GPS_FIX_TIMEOUT_MS        60000
+#define GPS_FIX_TIMEOUT_MS        30000
 
 // ─── DFPlayer Mini ────────────────────────────────────────────────────────────
 #define DFPLAYER_BAUD_RATE        9600

@@ -113,7 +113,7 @@ void initBLE() {
 
 // ─── Send notification to app ──────────────────────────────────────────────────
 void sendBLENotification(String message) {
-  if (!bleConnected) {
+  if (!bleConnected || pNotifyChar == nullptr) {
     DEBUG_PRINTLN("[BLE] Cannot send — not connected.");
     return;
   }
@@ -159,6 +159,7 @@ void handleBLEConnection() {
   // Play "connecting" audio once per attempt
   if (!_bleAudioPlayed && !isAudioPlaying()) {
     playAudio(AUDIO_BLE_CONNECTING);
+    waitForAudioFinish();
     _bleAudioPlayed = true;
   }
 

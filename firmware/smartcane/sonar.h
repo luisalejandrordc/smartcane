@@ -92,12 +92,16 @@ void setVibration(int distanceCm) {
   if (distanceCm < 0 || distanceCm >= sonarFarCm) {
     // No obstacle in range — motor off
     ledcWrite(PIN_VIBRATION, 0);
+    digitalWrite(PIN_BUZZER, LOW);
     return;
   }
 
   if (distanceCm <= sonarNearCm) {
     // At or closer than near threshold — max vibration
     ledcWrite(PIN_VIBRATION, _vibMaxDuty);
+    if (buzzerEnabled) {
+      digitalWrite(PIN_BUZZER, HIGH);
+    }
     return;
   }
 

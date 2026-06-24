@@ -25,9 +25,9 @@ struct SensitivityConfig {
 };
 const SensitivityConfig SENSITIVITY_LEVELS[] = {
     {0, 0},    // index 0 unused
-    {150, 40}, // Level 1 — Low (wide range)
-    {120, 30}, // Level 2 — Medium (default)
-    {100, 20}, // Level 3 — High (close range only)
+    {60, 10}, // Level 1 — Low (wide range)
+    {50, 10}, // Level 2 — Medium (default)
+    {40, 10}, // Level 3 — High (close range only)
 };
 
 // ─── Vibration level -> PWM duty cycle limits ──────────────────────────────────
@@ -38,8 +38,8 @@ struct VibrationConfig {
 const VibrationConfig VIBRATION_LEVELS[] = {
     {0, 0},    // index 0 unused
     {60, 200}, // Level 1 — Low
-    {60, 230}, // Level 2 — Medium (default)
-    {80, 255}, // Level 3 — High
+    {60, 255}, // Level 2 — Medium (default)
+    {100, 255}, // Level 3 — High
 };
 
 // ─── Apply vibration level ─────────────────────────────────────────────────────
@@ -123,5 +123,6 @@ void applyAppConfig(String msg) {
 
   // Confirm receipt to user via audio
   // Non-blocking — sonar and button continue while audio plays
-  playAudio(AUDIO_CONFIG_RECEIVED); 
+  playAudio(AUDIO_CONFIG_RECEIVED);
+  waitForAudioFinish();
 }
