@@ -46,9 +46,9 @@
 // ─── Battery ──────────────────────────────────────────────────────────────────
 #define BATTERY_ADC_RESOLUTION    4095.0f
 #define BATTERY_ADC_VREF          3.3f
-#define BATTERY_DIVIDER_RATIO     2.0f
-#define BATTERY_MAX_VOLTAGE       4.2f
-#define BATTERY_MIN_VOLTAGE       3.0f
+#define BATTERY_DIVIDER_RATIO     3.7f
+#define BATTERY_MAX_VOLTAGE       8.4f
+#define BATTERY_MIN_VOLTAGE       6.0f
 #define BATTERY_ADC_OFFSET        0.172f
 #define BATTERY_CHECK_INTERVAL_MS 60000
 #define BATTERY_LOW_THRESHOLD_1   20
